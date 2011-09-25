@@ -116,6 +116,10 @@ function init_application () {
         $('td',data.$tr).bind('click',function(e){
             books.trigger(data.id, "filterByAttribute", $(this).attr("data-field"));
         });
+        $('td',data.$tr).bind('click',function(e){
+            if (!!e.metaKey) {
+            }
+        });
         $('tbody', $table).append(data.$tr);
     });
 

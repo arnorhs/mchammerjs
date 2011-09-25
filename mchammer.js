@@ -12,9 +12,15 @@
     It makes your code base essentially flat, uses very little memory and
     allows the code to become very understandable.
 
+    It makes speghetti code less unpredictable since all functions are always
+    called within the same scope, so passing objects and data around becomes
+    predictable and you won't have scope-creep.
+
     todo:
     - simplify .extend for our very narrow use case
     - set up docs from the source comments
+    - the impementing code looks kind of ugly from an aesthetic point of
+      view. It would be nice if we could make it more pretty.
 
 */
 
