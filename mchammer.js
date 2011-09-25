@@ -111,7 +111,7 @@ window.MCHammer = (function(){
 
         return a new MCH object
     */
-    MCH function (options) {
+    function MCH (options) {
         this.options = $.extend({},{
             debug: false
         }, options);
