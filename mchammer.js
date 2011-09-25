@@ -44,38 +44,32 @@ window.MCHammer = (function(){
       }
 
       // Handle case when target is a string or something (possible in deep copy)
-      if ( typeof target !== "object" && !jQuery.isFunction(target) )
-        target = {};
+      if ( typeof target !== "object" && !isFunction(target) ) target = {};
 
-      // extend jQuery itself if only one argument is passed
-      if ( length == i ) {
-        target = this;
-        --i;
-      }
-
-      for ( ; i < length; i++ )
+      for ( ; i < length; i++ ) {
         // Only deal with non-null/undefined values
-        if ( (options = arguments[ i ]) != null )
+        if ( (options = arguments[ i ]) != null ) {
           // Extend the base object
           for ( var name in options ) {
             var src = target[ name ], copy = options[ name ];
 
             // Prevent never-ending loop
-            if ( target === copy )
-              continue;
+            if ( target === copy ) continue;
 
             // Recurse if we're merging object values
-            if ( deep && copy && typeof copy === "object" && !copy.nodeType )
-              target[ name ] = jQuery.extend( deep,
+            if ( deep && copy && typeof copy === "object" && !copy.nodeType ) {
+              target[ name ] = extend( deep,
                 // Never move original objects, clone them
                 src || ( copy.length != null ? [ ] : { } )
               , copy );
-
             // Don't bring in undefined values
-            else if ( copy !== undefined )
+            } else if ( copy !== undefined ) {
               target[ name ] = copy;
+            }
 
           }
+        }
+      }
 
       // Return the modified object
       return target;
@@ -110,7 +104,7 @@ window.MCHammer = (function(){
               - items
               - events
         */
-        this.options = $.extend({},{
+        this.options = extend({},{
             debug: false,
             debugOnlyTriggers: false
         }, options);
@@ -184,6 +178,48 @@ window.MCHammer = (function(){
         return true;
     };
 
+    /*
+        updateItem (id)
+
+        updates an item in the list
+
+            id            the id of the element that will be added.
+                          Can be a string or an integer
+
+            properties    properties to be edited. can just as well
+                          be a completely new object, the same
+                          object or whatever
+
+        returns true if successful, but false if not (eg. if an item
+        with a corresponding id cannot be found.
+
+        there is an internal event triggered, "MCH:updateItem"
+        note that it will be called after the item is updated, with
+        the corresponding data object, as well as the new data (in
+        extraParams) - so you can use it to take action on that item
+        based on the change.
+
+        It might be more useful to get the old object, the new object,
+        and the change, but that would require a deep copy and maybe
+        it's simply something nobody cares about. So for now we'll
+        make do with just receiving the changed thing and then
+        the updated properties.
+
+        it's possible that in the future specifying a false/true return
+        value on that event handler will determine if the item will
+        eventually be changed or not...
+
+    */
+    MCH.prototype.updateItem = function (id, newData) {
+        if (typeof this.items[id] === "undefined") {
+            this.log("updateItem: ", id, "Warning: No item found with that ID");
+            return false;
+        }
+        this.items[id] = extend(this.items[id], newData);
+        this.trigger(id, "MCH:updateItem", newData);
+        this.log("updateItem: ", id, newData);
+        return true;
+    }
     /*
         removeItem (id)
 

@@ -17,7 +17,6 @@ $(function(){
         todo_list.addItem(generate_id(), random_items[i]);
     }
 
-
 });
 
 function init_application () {
@@ -39,8 +38,13 @@ function init_application () {
         // functionality for cleanliness.. i just don't remember the
         // syntax off the top of my head. (NO internet, atm)
         data.$li = $('<li data-id="'+data.id+'"><div class="text">'+data.text+'</div><div class="delete">Delete</div></li>');
-        $('.delete',data.$li).bind('click',function () {
+        $('.delete',data.$li).bind('click',function (e) {
             todo_list.removeItem(data.id);
+            e.stopPropagation();
+        });
+        data.$li.bind('click',function(e){
+            // just update somehow.. don't care at this point it's already 2:18 am
+            todo_list.updateItem(data.id, {text:data.text+' with update'});
         });
         $('ul', $todo_list).append(data.$li);
     });
@@ -51,6 +55,9 @@ function init_application () {
         });
     });
 
+    todo_list.bind("MCH:updateItem", function (data, newData) {
+        $('.text',data.$li).html(data.text);
+    });
 
     // setup events for all controls
     $('form', $controls).submit(function(){
