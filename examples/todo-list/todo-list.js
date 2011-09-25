@@ -5,6 +5,19 @@ $(function(){
 
     init_application();
 
+    // add a bunch of random items to the list
+    var random_items = [
+        {text: "eat zombies"},
+        {text: "drink the blood of the epic king"},
+        {text: "fuck unicorns"},
+        {text: "make love to a spaceship"},
+        {text: "remember what to do next"}
+    ];
+    for (var i = 0; i < random_items.length; i++) {
+        todo_list.addItem(generate_id(), random_items[i]);
+    }
+
+
 });
 
 function init_application () {
@@ -15,6 +28,8 @@ function init_application () {
     // some vars we'll use frequently for easy access:
     var $todo_list = $('#todo_list'),
         $controls = $('.todo-controls');
+
+    $('input.add-text',$controls).focus();
 
     // Binding an event to fire each time a new item is added to the
     // item list
@@ -36,31 +51,19 @@ function init_application () {
         });
     });
 
-    // add a bunch of random items to the list
-    var random_items = [
-        {text: "eat zombies"},
-        {text: "drink the blood of the epic king"},
-        {text: "fuck unicorns"},
-        {text: "make love to a spaceship"},
-        {text: "remember what to do next"}
-    ];
-    for (var i = 0; i < random_items.length; i++) {
-        todo_list.addItem(generate_id(), random_items[i]);
-    }
-
 
     // setup events for all controls
     $('form', $controls).submit(function(){
         var $input = $('input.add-text', this);
+        if ($input.val() === "") {
+          return false;
+        }
         todo_list.addItem(generate_id(), {
             text: $input.val()
         });
         $input.val("");
         return false;
     });
-
-    todo_list.options.debug = true;
-    todo_list.options.debugOnlyTriggers = true;
 
 }
 

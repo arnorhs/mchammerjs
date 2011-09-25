@@ -11,21 +11,29 @@
 </head>
 <body>
 
-  <h1>
-    MCHammer example: Todo list
-  </h1>
+  <div class="wrap-page">
+    <h1>
+      MCHammer example: Todo list
+    </h1>
 
-  <hr />
+    <hr />
 
-  <div class="todo-controls">
-    <form>
-      <input type="text" placeholder="add an item..." class="add-text" />
-      <button class="add-save">Add</button>
-    </form>
-  </div>
+    <div class="todo-controls">
+      <form>
+        <div class="wrap-input">
+          <div class="inner">
+            <input type="text" placeholder="add an item..." class="add-text" />
+          </div>
+        </div>
+        <div class="wrap-button">
+          <button class="add-save">Add</button>
+        </div>
+      </form>
+    </div>
 
-  <div id="todo_list">
-    <ul></ul>
+    <div id="todo_list">
+      <ul></ul>
+    </div>
   </div>
 
 </body>
