@@ -1,0 +1,12 @@
+/* example usage of MCHammer */
+
+
+
+
+
+
+
+
+
+
+
