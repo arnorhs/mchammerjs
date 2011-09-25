@@ -10,7 +10,7 @@ $(function(){
 function init_application () {
 
     // instantiate a new MCHammer object.. whee! first one, actually
-    var todo_list = new MCHammer();
+    window.todo_list = new MCHammer();
 
     // some vars we'll use frequently for easy access:
     var $todo_list = $('#todo_list'),
@@ -31,7 +31,9 @@ function init_application () {
     });
 
     todo_list.bind("MCH:removeItem", function (data) {
-        data.$li
+        data.$li.fadeOut(250,function(){
+            data.$li.remove();
+        });
     });
 
     // add a bunch of random items to the list
@@ -58,6 +60,7 @@ function init_application () {
     });
 
     todo_list.options.debug = true;
+    todo_list.options.debugOnlyTriggers = true;
 
 }
 

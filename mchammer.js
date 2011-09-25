@@ -108,6 +108,9 @@ window.MCHammer = (function(){
         - debug
           Will log every event and action that happens within the framework
           default value: false
+        
+        - debugOnlyTriggers
+          Will only print debug on triggering events
 
         return a new MCH object
     */
@@ -119,7 +122,8 @@ window.MCHammer = (function(){
               - events
         */
         this.options = $.extend({},{
-            debug: false
+            debug: false,
+            debugOnlyTriggers: false
         }, options);
         this.items = {};
         this.events = {};
@@ -139,7 +143,9 @@ window.MCHammer = (function(){
 
     MCH.prototype.log = function () {
         if (!this.options.debug) return;
-        a = arguments;
+        var a = arguments;
+        // now this is a hack if I've ever seen one
+        if (this.options.debugOnlyTriggers && a[0].indexOf("trigger:") != 0) return;
         Array.prototype.unshift.call(a, "{MCH.log} ");
         console.log.apply(console, a);
     };
