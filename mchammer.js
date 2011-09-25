@@ -1,11 +1,6 @@
 /*
 
-    MCHammer
-
-    Super simple model controller framework
-
-    SSMCF ?
-    Smackf
+    MCHammer - model-controller framework
 
     A very simple event-structured framework for developing complex javascript
     applications/interactions.
@@ -18,10 +13,8 @@
     allows the code to become very understandable.
 
     todo:
-    - test
-    - do the .log thing everywhere
-    - remove the need for $.isFunction, $.extend
-    - write docs
+    - simplify .extend for our very narrow use case
+    - set up docs from the source comments
 
 */
 
@@ -35,10 +28,6 @@ window.MCHammer = (function(){
 
     var isFunction = function (obj) {
       return typeof obj === "function";
-    };
-
-    var isArray = function (obj) {
-      return toString.call(obj) === "[object Array]";
     };
 
     // this one can probably be simplified for the narrow use case
