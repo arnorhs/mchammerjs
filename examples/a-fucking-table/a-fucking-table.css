@@ -1,0 +1,120 @@
+html,body, h1,h2,h3,h4,h5,h6,p,form {
+  padding:0;
+  margin:0;
+}
+body {
+  font-size: 18px;
+  font-family: helvetica, arial, sans-serif;
+  color: #303030;
+  background: #EEE;
+}
+
+hr {
+  border:0;
+  height: 0px;
+  background: #FFF;
+  border-top: 1px solid #BBB;
+  border-bottom: 1px solid #FFF;
+}
+
+
+
+
+
+
+
+.wrap-page {
+  width: 100%;
+  max-width: 600px;
+  margin: 0px auto;
+  padding: 40px 0;
+}
+h1 {
+  text-shadow: 0px 1px 0px #FFF;
+  font-size: 26px;
+}
+p {
+  margin: 1em 0;
+  font-size: 15px;
+}
+
+
+
+
+
+
+
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+table tr {
+  background: #FFF;
+  border-bottom: 1px solid #DDD;
+}
+table tbody tr:hover {
+  background: #F8F8F8;
+}
+table tbody tr td {
+  cursor:pointer;
+  color: #555;
+}
+table tbody tr td:hover {
+  cursor:pointer;
+  background: #EEE;
+  color: #000;
+}
+table td, table th {
+  font-size: 12px;
+  padding: 10px 12px;
+}
+
+table thead tr th {
+  text-align:left;
+  width: 25%;
+}
+
+
+.filter-indicator.active {
+  margin-bottom: 10px;
+  font-size: 15px;
+  background: #DDD;
+  color: #FFF;
+  padding: 8px;
+  position: relative;
+}
+.filter-indicator.active .remove {
+  position: absolute;
+  color: #FFF;
+  right: 8px;
+  display:block;
+  text-decoration: none;
+  padding: 0 5px;
+  top: 8px;
+  background: #D0D0D0;
+}
+
+.filter-indicator.active .remove:hover {
+  background: #999;
+}
+.filter-indicator.active span.value {
+  font-weight: bold;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
