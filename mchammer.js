@@ -28,13 +28,13 @@
 window.MCHammer = (function(){
 
     /*
-        these three are copied from jQuery.. sorry about that. But they are
-        not introduced into the global scope, so that shouldn't really
+        some of these are copied from jQuery.. sorry about that. But they
+        are not introduced into the global scope, so that shouldn't really
         be a problem (aside from the extra bytes)
     */
 
     var isFunction = function (obj) {
-      return toString.call(obj) === "[object Function]";
+      return typeof obj === "function";
     };
 
     var isArray = function (obj) {
@@ -112,10 +112,17 @@ window.MCHammer = (function(){
         return a new MCH object
     */
     function MCH (options) {
+        /*
+            Public variables:
+              - options
+              - items
+              - events
+        */
         this.options = $.extend({},{
             debug: false
         }, options);
-        this.items = this.events = {};
+        this.items = {};
+        this.events = {};
     }
 
     /*
@@ -133,7 +140,7 @@ window.MCHammer = (function(){
     MCH.prototype.log = function () {
         if (!this.options.debug) return;
         a = arguments;
-        a.unshift("MCH log");
+        Array.prototype.unshift.call(a, "{MCH.log} ");
         console.log.apply(console, a);
     };
 
@@ -143,7 +150,7 @@ window.MCHammer = (function(){
         adds a new item to the list of items.
 
             id      the id of the element that will be added. MCH provides
-                    no method yet of autodefining ids for you, yet.
+                    no method of autodefining ids for you, yet.
                     Can be a string or an integer
 
             data    a JS object of the data to pass in. Can be anything and
@@ -153,10 +160,18 @@ window.MCHammer = (function(){
         returns true if successful, but false if not (eg. if an item with the
         same id has already been added)
 
+        additionally the id will also be added to the object itself, so if
+        you pass on an id property in the data object, that will be
+        overridden by the id you pass in. you could either think that you
+        don't have to set it, or just allow it to be overridden...
+
         a common usage pattern is to provide all kinds of properties to this
         newly created item. Even references to dom nodes or jQuery objects.
         And another power usage pattern is to provide references/objects from
         items of other MCH objects.
+
+        if successful, an internal event "MCH:addItem" will also be
+        triggered.
 
     */
     MCH.prototype.addItem = function (id, data) {
@@ -166,8 +181,45 @@ window.MCHammer = (function(){
             return false;
         }
         data.id = id;
+        data._ = {};
+        // used internally for some stuff
         this.items[id] = data;
         this.log("addItem: ", id, data);
+        this.trigger(data, "MCH:addItem");
+        return true;
+    };
+
+    /*
+        removeItem (id)
+
+        removes an item from the list
+
+            id      the id of the element that will be added.
+                    Can be a string or an integer
+
+        returns true if successful, but false if not (eg. if an item with a
+        corresponding id cannot be found.
+
+        there is an internal event triggered, "MCH:removeItem"
+        note that it will be called before the item is removed, with the
+        corresponding data object - so you can use it to take action
+        on that item - just know that it will be deleted right
+        afterwards.
+
+        it's possible that in the future specifying a false/true return
+        value on that event handler will determine if the item will
+        eventually be removed or not...
+
+    */
+    MCH.prototype.removeItem = function (id) {
+
+        if (typeof this.items[id] === "undefined") {
+            this.log("removeItem: ", id, "Warning: No item found with that ID");
+            return false;
+        }
+        this.trigger(id, "MCH:removeItem");
+        delete this.items[id];
+        this.log("removeItem: ", id);
         return true;
     };
 
@@ -185,15 +237,15 @@ window.MCHammer = (function(){
     */
     MCH.prototype.getItem = function (id) {
         if (typeof this.items[id] === "undefined") {
-            this.log("getItemItem: ", id, "Warning: Item not found");
+            this.log("getItem: ", id, "Warning: Item not found");
             return {};
         }
-        this.log("getItemItem: ", id);
+        this.log("getItem: ", id);
         return this.items[id];
     };
 
     /*
-        addEvent (eventName, callback)
+        bind (eventName, callback)
 
         adds a new event handler to the events list.
 
@@ -227,20 +279,39 @@ window.MCHammer = (function(){
                           assigned to the second parameter of
                           the function.
 
+            you should realize that the item passed on into the
+            function is not a deep copy, but the actual variable
+            in memory - any changes you make to it will persist
+            without those changes triggering any events. This
+            can be very useful eg. for adding jquery references
+            to the object etc.
+
+            the "this" value of the function will be a reference
+            to the MCH object. So essentially you're calling
+            it from within itself. This might change in the
+            future (as well as practically everything else)
+
             MCH places no constraints on a return value and will
             essentially ignore it.
 
+            there are also built in events that you can hook on
+            to, that are triggered by MCHammer internally,
+            nameley:
+
+            MCH:addItem - gets triggered when you add a new
+                          item to the object using addItem
+
     */
-    MCH.prototype.addEvent = function (eventName, callback) {
+    MCH.prototype.bind = function (eventName, callback) {
         if (typeof this.events[eventName] === "undefined") {
             this.events[eventName] = [];
         }
         if (!isFunction(callback)) {
-            this.log("addEvent: "+eventName, callback, "Error: Not a function");
+            this.log("bind: "+eventName, callback, "Error: Not a function, is a: "+typeof callback);
             return false;
         }
-        this.events[eventName].add(callback);
-        this.log("addEvent: "+eventName, callback);
+        this.events[eventName].push(callback);
+        this.log("bind: "+eventName, callback);
         return true;
     };
 
@@ -251,6 +322,13 @@ window.MCHammer = (function(){
         that you provide an ID of the element that is being affected.
 
             id                        the id of the item the trigger applies to
+
+                                      can, technically, also be an object, and
+                                      theoretically you might want to ever
+                                      pass an object to it, even completley
+                                      unrelated, but personally I think that's
+                                      nuts.. (used internally to trigger events
+                                      on objects that have already been retrieved)
 
             eventName                 name of the event to be triggered
 
@@ -266,29 +344,48 @@ window.MCHammer = (function(){
     */
     MCH.prototype.trigger = function (id, eventName, extraParams) {
         if (typeof this.events[eventName] === "undefined") {
-            this.log("trigger: ", id, data, "Warning: Event triggered has no event handler");
+            this.log("trigger: ", id, eventName, "Warning: Event triggered has no event handler");
             return false;
         }
 
-        var item = this.getItem(id);
-        // pass on the name of the trigger - useful if using the same
-        // event handler for multiple triggers
-        item._.trigger = eventName;
-
-        var params = [item];
-        if (typeof extraParams !== "undefined") {
-            params.add(extraParams);
+        var item;
+        // optionally you can pass on an object to the trigger - that will
+        // make the trigger not retrieve the item but use that object.
+        // theoretically you could then pass on something that's not at all
+        // a member of the item list, i'd say that's crazy, but I guess it's
+        // up to the developer... (used mostly internally to trigger an
+        // event on an object that's already been created and is in memory)
+        if (typeof id === "object" && id.hasOwnProperty("_")) {
+            item = id;
+            id = item.id;
+        } else {
+            item = this.getItem(id);
         }
 
+        // pass on meta information, currently only the name of the trigger
+        // - useful if using the same event handler for multiple triggers
+        item._.trigger = eventName;
+
+        // set up params for calling the corresponding event.
+        // the params are the item being called on and any extra params
+        // passed on when triggering the event
+        var params = [item];
+        if (typeof extraParams !== "undefined") {
+            params.push(extraParams);
+        }
+
+        // call all defined events for this item's ID
         for (var i = 0, l = this.events[eventName].length; i < l; i++) {
             this.events[eventName][i].apply(this, params);
         }
+
+        this.log("trigger: ", id, eventName);
 
         return true;
     };
 
 
 
-
+    return MCH;
 
 })();
