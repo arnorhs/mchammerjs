@@ -14,7 +14,6 @@ It makes speghetti code less unpredictable since all functions are always
 called within the same scope, so passing objects and data around becomes
 predictable and you won't have scope-creep.
 
-
 Examples etc coming up sometime in the near future (measured in decades)
 
 
