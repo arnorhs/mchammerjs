@@ -60,10 +60,9 @@ particular feature you're working on which you think MCHammer will be well
 suited for, you can use it only for that feature if you like. The footprint is
 quite small.
 
-The uncompressed code is around 15KB and using Google Closure or some other JS
-minimization techniques you can probably get it down to around 3-4 KB. I simply
-haven't tried, since I'm offline atm and don't have any set up on the computer
-I'm writing this on.
+The uncompressed code is around 15KB and using the YUI compressor (the version
+you'll probably end up using in production) the size goes down to 2.4KB as of
+writing.
 
 **Plays very nice with any JS library**
 
