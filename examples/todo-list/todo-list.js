@@ -2,11 +2,11 @@
 
 // these items will be added to our todo list
 var random_items = [
-    {text: "eat zombies"},
-    {text: "drink the blood of the epic king"},
-    {text: "fuck unicorns"},
-    {text: "make love to a spaceship"},
-    {text: "remember what to do next"}
+    {text: "eat zombies", done:false},
+    {text: "drink the blood of the epic king", done:false},
+    {text: "fuck unicorns", done:false},
+    {text: "make love to a spaceship", done:false},
+    {text: "remember what to do next", done:false}
 ];
 
 // instantiate a new MCHammer object.. whee! first one, actually
@@ -26,28 +26,40 @@ todo_list.bind("MCH:addItem", function (data) {
         functionality for cleanliness.. i just don't remember the
         syntax off the top of my head. (NO internet, atm)
     */
-    data.$li = $('<li data-id="'+data.id+'"><div class="text">'+data.text+'</div><div class="delete">Delete</div></li>');
+    data.$li = $('<li data-id="'+data.id+'"><div class="done '+(data.done?"true":"")+'">&check;</div><div class="text">'+data.text+'</div><div class="delete">Delete</div></li>');
+
+    // when somebody checks an item as done
+    $('.done',data.$li).bind('click',function(e){
+        // we set the value to the opposite to what it was
+        todo_list.updateItem(data.id, {done:!data.done});
+        e.stopPropagation();
+    });
+
+    // when somebody clicks the delete button
     $('.delete',data.$li).bind('click',function (e) {
         todo_list.removeItem(data.id);
         e.stopPropagation();
     });
-    // When a list item is clicked - this is just for demo purposes, don't know
-    // why you'd actually want to do that
-    data.$li.bind('click',function(e){
-        // just update somehow.. don't care at this point it's already 2:18 am
-        todo_list.updateItem(data.id, {text:data.text+' with update'});
-    });
     $('ul', $todo_list).append(data.$li);
 });
 
+/*
+    Built-in event that gets fired when a value is changed/updated using
+    todo_list.updateItem();
+    currently in this app the only thing that changes is the state of done
+    from true to false, so this code reflects that. But usually you'll
+    probably be updating more values, like if the text was edited, etc.
+*/
+todo_list.bind("MCH:updateItem", function (data, newData) {
+    $('.done',data.$li).toggleClass('true', newData.done);
+});
+
+// built-in event that gets fired when an item is removed from the list using
+// todo_list.removeItem();
 todo_list.bind("MCH:removeItem", function (data) {
     data.$li.fadeOut(250,function(){
         data.$li.remove();
     });
-});
-
-todo_list.bind("MCH:updateItem", function (data, newData) {
-    $('.text',data.$li).html(data.text);
 });
 
 // helper function to generate an ID for item that gets added
