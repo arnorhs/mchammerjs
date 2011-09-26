@@ -88,7 +88,7 @@ table thead tr th {
   padding: 8px;
   position: relative;
 }
-.filter-indicator.active .remove {
+.filter-indicator.active .clear {
   position: absolute;
   color: #FFF;
   right: 8px;
@@ -99,7 +99,7 @@ table thead tr th {
   background: #D0D0D0;
 }
 
-.filter-indicator.active .remove:hover {
+.filter-indicator.active .clear:hover {
   background: #999;
 }
 .filter-indicator.active span.value {
