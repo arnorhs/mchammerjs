@@ -84,11 +84,22 @@ the app respond to different #! (hash-bang) URLs. MCHammer doesn't hanve
 anything like that, so if you're building an app that requires something like
 that, you'll need to find/create something that provides that functionality.
 
-#Example usage
+#Usage
+
+The only thing you need to do to start using MCHammer is to inclue the
+mchammer.js file in your code. There are no requirements on having to put it in
+the HEAD of the document or at the bottom or anything like that.
+
+You can also start assigning events and triggers before the DOM finishes
+loading, so you don't really have to put your initialization stuff in a
+$(document).ready() definition. Just realize that if you're using the DOM in any
+of them it won't be ready yet.
+
+**Code examples**
 
 There are a couple of examples of how to build something using MCHammer in the
-"examples" folder. Feel free to play with those to get a sense for how apps
-can be structured using it.
+"examples" folder in the repository. Feel free to play with those to get a sense
+for how apps can be structured using it.
 
 #Bugs, issues, feature requests
 
@@ -97,5 +108,8 @@ simply email me, arnorhs@gmail.com
 
 Go ahead and fork the application as well and do a pull request if you have
 something to contribute.
+
+Even spelling error fixes are welcome. I probably could need them since I'm not
+a native english speaker.
 
 
