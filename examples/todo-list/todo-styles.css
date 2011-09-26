@@ -78,6 +78,7 @@
   background: #FFF;
   position: relative;
   line-height: 1.3em;
+  cursor:default;
 }
 #todo_list ul li .text {
   padding: 12px 60px 8px 38px;
@@ -111,13 +112,22 @@
   background: #FFF;
   border: 1px solid rgba(0,90,100, 0.4);
   border-radius: 3px;
+
+  /* this is a __REAL__ hack to get the checkmark to sit in the right place. if this
+     wasn't a demo, i should kill myself */
+  text-indent: -10000px;
+  overflow:hidden;
+  line-height: 11px;
+  font-size: 25px;
 }
 
 #todo_list ul li .done:hover {
   background: rgba(128,160,180,0.1);
 }
 #todo_list ul li .done.true {
-  background: rgba(0,100,160, 0.5);
+  background: rgba(128,160,180,0.1);
+  text-indent: 2px;
+  overflow: visible;
 }
 
 

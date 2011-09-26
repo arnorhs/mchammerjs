@@ -26,13 +26,15 @@ todo_list.bind("MCH:addItem", function (data) {
         functionality for cleanliness.. i just don't remember the
         syntax off the top of my head. (NO internet, atm)
     */
-    data.$li = $('<li data-id="'+data.id+'"><div class="done '+(data.done?"true":"")+'"></div><div class="text">'+data.text+'</div><div class="delete">Delete</div></li>');
+    data.$li = $('<li data-id="'+data.id+'"><div class="done '+(data.done?"true":"")+'">&check;</div><div class="text">'+data.text+'</div><div class="delete">Delete</div></li>');
+
     // when somebody checks an item as done
     $('.done',data.$li).bind('click',function(e){
         // we set the value to the opposite to what it was
         todo_list.updateItem(data.id, {done:!data.done});
         e.stopPropagation();
     });
+
     // when somebody clicks the delete button
     $('.delete',data.$li).bind('click',function (e) {
         todo_list.removeItem(data.id);
