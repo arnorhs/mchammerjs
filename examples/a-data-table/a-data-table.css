@@ -45,6 +45,10 @@ p {
 
 
 
+#our_table {
+  background: #FFF;
+  padding: 12px;
+}
 table {
   width: 100%;
   border-collapse: collapse;

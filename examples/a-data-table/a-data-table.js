@@ -1,4 +1,4 @@
-/* example usage of MCHammer - a fucking table */
+/* example usage of MCHammer - a data table */
 
 
 $(function(){
@@ -133,6 +133,7 @@ function init_application () {
             .bind('click',function(){
                 $('tr',$table).show();
                 $(this).closest('.filter-indicator').removeClass('active').hide();
+                return false;
             });
 
         for (var id in books.items) {
