@@ -260,6 +260,89 @@ window.MCHammer = (function(){
         return true;
     };
 
+    /**********************************************************************
+     *
+     *  New methods which I'm not sure about
+     *
+     *********************************************************************/
+      
+    /*
+        findByProperty (properties)
+
+        retrieves all the items that have a certain property
+
+            properties    A JS object with the properties and the values
+                          you are searching for. There is no deep searching
+                          taking place. So if an object equals to === it
+                          is retrieved.
+
+                          Can be many properties
+
+        returns an empty object if no items are found, or the
+        corresponding objects if they're found referenced by the
+        same id as the original objects
+    */
+    MCH.prototype.findByProperty = function (properties) {
+        this.log("findByProperty: ");
+
+        if (typeof properties !== "object") {
+            this.log("getItem: ", id, "Warning: No properties specified");
+            return {};
+        }
+
+        // we'll collect the list of found properties here
+        var foundItems = {}, ok;
+        // I don't have a clue how to otherwise get the first item...
+        for (var i in this.items) {
+          // default to true.. through the iteration if any of the
+          // values are false, we'll set it to false and break so
+          // the item is only accepted if this variable is still ok
+          ok = true;
+          for (var j in properties) {
+            if (!this.items[i].hasOwnProperty(j)) {
+              ok = false;
+              break;
+            }
+            if (properties[j] !== this.items[i][j]) {
+              ok = false;
+              break;
+            }
+          }
+          // add the item to foundItems with the same key
+          if (ok) {
+            foundItems[this.items[i].id] = this.items[i];
+          }
+        }
+
+        return foundItems;
+    };
+
+    /*
+        getFirstItem ()
+
+        retrieves the first item from the item storage.
+
+        returns an empty object if the item is not found, or the
+        corresponding object if it's found.
+
+        I don't know why you'd need this function, except for
+        testing purposes
+    */
+    MCH.prototype.getFirstItem = function () {
+        this.log("getFirstItem: ");
+        // I don't have a clue how to otherwise get the first item...
+        for (var i in this.items) {
+          if (!this.items.hasOwnProperty(i)) continue;
+          return this.items[i];
+        }
+    };
+
+    /**********************************************************************
+     *
+     *  End of new methods which I'm not sure about
+     *
+     *********************************************************************/
+      
     /*
         getItem (id)
 
