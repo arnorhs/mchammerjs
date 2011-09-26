@@ -37,6 +37,7 @@ window.MCHammer = (function(){
     };
 
     // this one can probably be simplified for the narrow use case
+    // currently it's just a copy of the jquery one except I removed the "extend jquery" bit
     var extend = function() {
       // copy reference to target object
       var target = arguments[0] || {}, i = 1, length = arguments.length, deep = false, options;
@@ -119,15 +120,15 @@ window.MCHammer = (function(){
     }
 
     /*
-       log ([argument1, [argument2, [...]]])
+        log ([argument1, [argument2, [...]]])
 
-       Logging/debug/tracing function. Only used internally, but I suppose
-       you could use it anywhere for some reason...
+        Logging/debug/tracing function. Only used internally, but I suppose
+        you could use it anywhere for some reason...
 
-       accepts any number of arguments but basically calls console.log()
-       if the debug mode is set to true
+        accepts any number of arguments but basically calls console.log()
+        if the debug mode is set to true
 
-       doesn't return anything
+        doesn't return anything
     */
 
     MCH.prototype.log = function () {
@@ -167,8 +168,8 @@ window.MCHammer = (function(){
 
         if successful, an internal event "MCH:addItem" will also be
         triggered.
-
     */
+
     MCH.prototype.addItem = function (id, data) {
 
         if (typeof this.items[id] !== "undefined") {
@@ -214,8 +215,8 @@ window.MCHammer = (function(){
         it's possible that in the future specifying a false/true return
         value on that event handler will determine if the item will
         eventually be changed or not...
-
     */
+
     MCH.prototype.updateItem = function (id, newData) {
         if (typeof this.items[id] === "undefined") {
             this.log("updateItem: ", id, "Warning: No item found with that ID");
@@ -226,6 +227,7 @@ window.MCHammer = (function(){
         this.log("updateItem: ", id, newData);
         return true;
     }
+
     /*
         removeItem (id)
 
@@ -246,8 +248,8 @@ window.MCHammer = (function(){
         it's possible that in the future specifying a false/true return
         value on that event handler will determine if the item will
         eventually be removed or not...
-
     */
+
     MCH.prototype.removeItem = function (id) {
 
         if (typeof this.items[id] === "undefined") {
@@ -294,24 +296,30 @@ window.MCHammer = (function(){
         var foundItems = {}, ok;
         // I don't have a clue how to otherwise get the first item...
         for (var i in this.items) {
-          // default to true.. through the iteration if any of the
-          // values are false, we'll set it to false and break so
-          // the item is only accepted if this variable is still ok
-          ok = true;
-          for (var j in properties) {
-            if (!this.items[i].hasOwnProperty(j)) {
-              ok = false;
-              break;
+            // default to true.. through the iteration if any of the
+            // values are false, we'll set it to false and break so
+            // the item is only accepted if this variable is still ok
+            ok = true;
+            for (var j in properties) {
+                // this function becomes around 40% faster if we skip
+                // this test, but it seems cleaner with it... what to
+                // do? what to do?
+                // using an undefined check results in around 30% speed
+                // improvement over "hasOwnProperty", so thi is hereby
+                // chosen as the default
+                if (typeof this.items[i][j] === "undefined") {
+                    ok = false;
+                    break;
+                }
+                if (properties[j] !== this.items[i][j]) {
+                    ok = false;
+                    break;
+                }
             }
-            if (properties[j] !== this.items[i][j]) {
-              ok = false;
-              break;
+            // add the item to foundItems with the same key
+            if (ok) {
+              foundItems[this.items[i].id] = this.items[i];
             }
-          }
-          // add the item to foundItems with the same key
-          if (ok) {
-            foundItems[this.items[i].id] = this.items[i];
-          }
         }
 
         return foundItems;
@@ -355,6 +363,7 @@ window.MCHammer = (function(){
         returns an empty object if the item is not found, or the
         corresponding objects if it's found.
     */
+
     MCH.prototype.getItem = function (id) {
         if (typeof this.items[id] === "undefined") {
             this.log("getItem: ", id, "Warning: Item not found");
@@ -420,8 +429,8 @@ window.MCHammer = (function(){
 
             MCH:addItem - gets triggered when you add a new
                           item to the object using addItem
-
     */
+
     MCH.prototype.bind = function (eventName, callback) {
         if (typeof this.events[eventName] === "undefined") {
             this.events[eventName] = [];
@@ -460,8 +469,8 @@ window.MCHammer = (function(){
 
         returns true if successful, false if there is no event for the
         matching name.
-
     */
+
     MCH.prototype.trigger = function (id, eventName, extraParams) {
         if (typeof this.events[eventName] === "undefined") {
             this.log("trigger: ", id, eventName, "Warning: Event triggered has no event handler");

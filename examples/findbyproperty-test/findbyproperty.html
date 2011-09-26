@@ -1,0 +1,36 @@
+<!doctype>
+<html>
+<head>
+  <title>
+    findByProperty test - MCHammer example
+  </title>
+
+  <link rel="stylesheet" href="findbyproperty.css" />
+
+  <!-- Include the MCHammer library -->
+  <script src="../../src/mchammer.js"></script>
+
+  <!-- the implementation code of the data table using mchammer. This
+       is probably the most interesting file you'll want to look at -->
+  <script src="findbyproperty.js"></script>
+
+</head>
+<body>
+
+  <div class="wrap-page">
+    <h1>
+      MCHammer example: A data table
+    </h1>
+
+    <hr />
+
+    <p>Should be run with the console open</p>
+
+    <button onclick="run_test1();">Run test1</button> populating the dataset with 1,000,000 rows (each click adds more)<br>
+    <button onclick="run_test2();">Run test2</button> finding by one property<br>
+    <button onclick="run_test3();">Run test3</button> finding by two properties<br>
+
+  </div>
+
+</body>
+</html>
