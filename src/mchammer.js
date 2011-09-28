@@ -19,6 +19,8 @@
     todo:
     - simplify .extend for our very narrow use case... maybe...?
     - set up docs from the source comments
+    - make it consistent that getItem and findByProperty return both arrays
+      or both return objects with the id is the reference of each element.
 
 */
 
@@ -325,6 +327,38 @@ window.MCHammer = (function(){
             }
         }
 
+        return foundItems;
+    };
+
+    /*
+        findByFunction (properties)
+
+        retrieves all the items that evaluate true through a callback function.
+
+            callback  A function that you define that accepts a single
+                      parameters, which is the item currently being searched
+                      on.
+
+        returns an empty object if no items are found, or the
+        corresponding objects if their values result in a truthy return value
+        from that function -- note: truthy. So if it evaluates to 1 or {} it
+        will still be returned (that might change in the future to a specific === true)
+    */
+    MCH.prototype.findByFunction = function (callback) {
+        if (!isFunction(callback)) {
+            this.log("findByFunction: ", callback, "Warning: callback is not a function");
+            return {};
+        }
+        // we'll collect the list of found properties here
+        var foundItems = {};
+        for (var i in this.items) {
+            // if the function specified returns true, add it to the list
+            // we're calling the function as if it's a function within mchammer with
+            // the current mchammer object as the "this" property of the function
+            if (callback.call(this,this.items[i])) {
+              foundItems[this.items[i].id] = this.items[i];
+            }
+        }
         return foundItems;
     };
 
