@@ -17,14 +17,15 @@
     predictable and you won't have scope-creep.
 
     todo:
-    - simplify .extend for our very narrow use case
+    - simplify .extend for our very narrow use case... maybe...?
     - set up docs from the source comments
-    - the impementing code looks kind of ugly from an aesthetic point of
-      view. It would be nice if we could make it more pretty.
 
 */
 
 window.MCHammer = (function(){
+
+    // These are only defined so the minified version becomes smaller. Every byte counts :)
+    var UNDEFINED = "undefined", OBJECT = "object";
 
     /*
         some of these are copied from jQuery.. sorry about that. But they
@@ -34,6 +35,10 @@ window.MCHammer = (function(){
 
     var isFunction = function (obj) {
       return typeof obj === "function";
+    };
+
+    var isArray = function (obj) {
+      return typeof obj === OBJECT && typeof obj["length"] === "number";
     };
 
     // this one can probably be simplified for the narrow use case
@@ -51,7 +56,7 @@ window.MCHammer = (function(){
       }
 
       // Handle case when target is a string or something (possible in deep copy)
-      if ( typeof target !== "object" && !isFunction(target) ) target = {};
+      if ( typeof target !== OBJECT && !isFunction(target) ) target = {};
 
       for ( ; i < length; i++ ) {
         // Only deal with non-null/undefined values
@@ -64,7 +69,7 @@ window.MCHammer = (function(){
             if ( target === copy ) continue;
 
             // Recurse if we're merging object values
-            if ( deep && copy && typeof copy === "object" && !copy.nodeType ) {
+            if ( deep && copy && typeof copy === OBJECT && !copy.nodeType ) {
               target[ name ] = extend( deep,
                 // Never move original objects, clone them
                 src || ( copy.length != null ? [ ] : { } )
@@ -172,7 +177,7 @@ window.MCHammer = (function(){
 
     MCH.prototype.addItem = function (id, data) {
 
-        if (typeof this.items[id] !== "undefined") {
+        if (typeof this.items[id] !== UNDEFINED) {
             this.log("addItem: ", id, data, "Warning: item with the same ID already there");
             return false;
         }
@@ -218,7 +223,7 @@ window.MCHammer = (function(){
     */
 
     MCH.prototype.updateItem = function (id, newData) {
-        if (typeof this.items[id] === "undefined") {
+        if (typeof this.items[id] === UNDEFINED) {
             this.log("updateItem: ", id, "Warning: No item found with that ID");
             return false;
         }
@@ -252,7 +257,7 @@ window.MCHammer = (function(){
 
     MCH.prototype.removeItem = function (id) {
 
-        if (typeof this.items[id] === "undefined") {
+        if (typeof this.items[id] === UNDEFINED) {
             this.log("removeItem: ", id, "Warning: No item found with that ID");
             return false;
         }
@@ -285,10 +290,8 @@ window.MCHammer = (function(){
         same id as the original objects
     */
     MCH.prototype.findByProperty = function (properties) {
-        this.log("findByProperty: ");
-
-        if (typeof properties !== "object") {
-            this.log("getItem: ", id, "Warning: No properties specified");
+        if (typeof properties !== OBJECT) {
+            this.log("findByProperty: ", id, "Warning: No properties specified");
             return {};
         }
 
@@ -307,7 +310,7 @@ window.MCHammer = (function(){
                 // using an undefined check results in around 30% speed
                 // improvement over "hasOwnProperty", so thi is hereby
                 // chosen as the default
-                if (typeof this.items[i][j] === "undefined") {
+                if (typeof this.items[i][j] === UNDEFINED) {
                     ok = false;
                     break;
                 }
@@ -352,21 +355,39 @@ window.MCHammer = (function(){
      *********************************************************************/
       
     /*
-        getItem (id)
+        getItem (id or array if ids)
 
         retrieves an item from the item storage by it's id. Currently you
         can only retrieve a single item.
 
             id:   The id of the item to retrieve. Can be a string or an
-                  integer.
+                  integer or an array of those
 
         returns an empty object if the item is not found, or the
         corresponding objects if it's found.
+
+        if you provide an array if ids as the parameter, it returns an
+        array of objects
+
+        note: the function is recursive, so theoretically you could provide a 
+        multi-dimensional array of ids, though I'm not sure why you'd
+        want to do that.
     */
 
     MCH.prototype.getItem = function (id) {
-        if (typeof this.items[id] === "undefined") {
-            this.log("getItem: ", id, "Warning: Item not found");
+        if (typeof id === UNDEFINED) {
+            this.log("getItem: ", id, "Warning: id provided is undefined");
+            return {};
+        }
+        if (isArray(id)) {
+            var ret = [], i = 0, l = id.length;
+            for ( ; i < l; i++) {
+                ret.push(this.getItem(id[i]));
+            }
+            return ret;
+        }
+        if (typeof this.items[id] === UNDEFINED) {
+            this.log("getItem: ", id, "id provided not found");
             return {};
         }
         this.log("getItem: ", id);
@@ -432,7 +453,7 @@ window.MCHammer = (function(){
     */
 
     MCH.prototype.bind = function (eventName, callback) {
-        if (typeof this.events[eventName] === "undefined") {
+        if (typeof this.events[eventName] === UNDEFINED) {
             this.events[eventName] = [];
         }
         if (!isFunction(callback)) {
@@ -472,7 +493,7 @@ window.MCHammer = (function(){
     */
 
     MCH.prototype.trigger = function (id, eventName, extraParams) {
-        if (typeof this.events[eventName] === "undefined") {
+        if (typeof this.events[eventName] === UNDEFINED) {
             this.log("trigger: ", id, eventName, "Warning: Event triggered has no event handler");
             return false;
         }
@@ -484,7 +505,7 @@ window.MCHammer = (function(){
         // a member of the item list, i'd say that's crazy, but I guess it's
         // up to the developer... (used mostly internally to trigger an
         // event on an object that's already been created and is in memory)
-        if (typeof id === "object" && id.hasOwnProperty("_")) {
+        if (typeof id === OBJECT && id.hasOwnProperty("_")) {
             item = id;
             id = item.id;
         } else {
@@ -499,7 +520,7 @@ window.MCHammer = (function(){
         // the params are the item being called on and any extra params
         // passed on when triggering the event
         var params = [item];
-        if (typeof extraParams !== "undefined") {
+        if (typeof extraParams !== UNDEFINED) {
             params.push(extraParams);
         }
 
