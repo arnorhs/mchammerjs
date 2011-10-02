@@ -40,7 +40,16 @@ todo_list.bind("MCH:addItem", function (data) {
         todo_list.removeItem(data.id);
         e.stopPropagation();
     });
-    $('ul', $todo_list).append(data.$li);
+    // hide it so we can animate it in...
+    data.$li.hide();
+    // add it to the list
+    $('ul', $todo_list).prepend(data.$li);
+    if (typeof data.predefined === "undefined") {
+        data.$li.slideDown(500);
+    } else {
+        // don't want to animate all the ones that were already there...
+        data.$li.show();
+    }
 });
 
 /*
@@ -78,6 +87,7 @@ $(function(){
     // walk through the list of items we generated before and add
     // each one to the object
     for (var i = 0; i < random_items.length; i++) {
+        random_items[i]['predefined'] = true;
         todo_list.addItem(generate_id(), random_items[i]);
     }
 
