@@ -126,446 +126,449 @@ window.MCHammer = (function(){
         this.events = {};
     }
 
-    /*
-        log ([argument1, [argument2, [...]]])
+    MCH.prototype = {
 
-        Logging/debug/tracing function. Only used internally, but I suppose
-        you could use it anywhere for some reason...
+        /*
+            log ([argument1, [argument2, [...]]])
 
-        accepts any number of arguments but basically calls console.log()
-        if the debug mode is set to true
+            Logging/debug/tracing function. Only used internally, but I suppose
+            you could use it anywhere for some reason...
 
-        doesn't return anything
-    */
+            accepts any number of arguments but basically calls console.log()
+            if the debug mode is set to true
 
-    MCH.prototype.log = function () {
-        if (!this.options.debug) return;
-        var a = arguments;
-        // now this is a hack if I've ever seen one
-        if (this.options.debugOnlyTriggers && a[0].indexOf("trigger:") != 0) return;
-        Array.prototype.unshift.call(a, "{MCH.log} ");
-        console.log.apply(console, a);
-    };
+            doesn't return anything
+        */
 
-    /*
-        addItem (id, data)
+        log: function () {
+            if (!this.options.debug) return;
+            var a = arguments;
+            // now this is a hack if I've ever seen one
+            if (this.options.debugOnlyTriggers && a[0].indexOf("trigger:") != 0) return;
+            Array.prototype.unshift.call(a, "{MCH.log} ");
+            console.log.apply(console, a);
+        },
 
-        adds a new item to the list of items.
+        /*
+            addItem (id, data)
 
-            id      the id of the element that will be added. MCH provides
-                    no method of autodefining ids for you, yet.
-                    Can be a string or an integer
+            adds a new item to the list of items.
 
-            data    a JS object of the data to pass in. Can be anything and
-                    MCH has no constraints on the types of properties. they
-                    can be anything - string, functions, other objects etc.
+                id      the id of the element that will be added. MCH provides
+                        no method of autodefining ids for you, yet.
+                        Can be a string or an integer
 
-        returns true if successful, but false if not (eg. if an item with the
-        same id has already been added)
+                data    a JS object of the data to pass in. Can be anything and
+                        MCH has no constraints on the types of properties. they
+                        can be anything - string, functions, other objects etc.
 
-        additionally the id will also be added to the object itself, so if
-        you pass on an id property in the data object, that will be
-        overridden by the id you pass in. you could either think that you
-        don't have to set it, or just allow it to be overridden...
+            returns true if successful, but false if not (eg. if an item with the
+            same id has already been added)
 
-        a common usage pattern is to provide all kinds of properties to this
-        newly created item. Even references to dom nodes or jQuery objects.
-        And another power usage pattern is to provide references/objects from
-        items of other MCH objects.
+            additionally the id will also be added to the object itself, so if
+            you pass on an id property in the data object, that will be
+            overridden by the id you pass in. you could either think that you
+            don't have to set it, or just allow it to be overridden...
 
-        if successful, an internal event "MCH:addItem" will also be
-        triggered.
-    */
+            a common usage pattern is to provide all kinds of properties to this
+            newly created item. Even references to dom nodes or jQuery objects.
+            And another power usage pattern is to provide references/objects from
+            items of other MCH objects.
 
-    MCH.prototype.addItem = function (id, data) {
+            if successful, an internal event "MCH:addItem" will also be
+            triggered.
+        */
 
-        if (typeof this.items[id] !== UNDEFINED) {
-            this.log("addItem: ", id, data, "Warning: item with the same ID already there");
-            return false;
-        }
-        data.id = id;
-        data._ = {};
-        // used internally for some stuff
-        this.items[id] = data;
-        this.log("addItem: ", id, data);
-        this.trigger(data, "MCH:addItem");
-        return true;
-    };
+        addItem: function (id, data) {
 
-    /*
-        updateItem (id)
+            if (typeof this.items[id] !== UNDEFINED) {
+                this.log("addItem: ", id, data, "Warning: item with the same ID already there");
+                return false;
+            }
+            data.id = id;
+            data._ = {};
+            // used internally for some stuff
+            this.items[id] = data;
+            this.log("addItem: ", id, data);
+            this.trigger(data, "MCH:addItem");
+            return true;
+        },
 
-        updates an item in the list
+        /*
+            updateItem (id)
 
-            id            the id of the element that will be added.
-                          Can be a string or an integer
+            updates an item in the list
 
-            properties    properties to be edited. can just as well
-                          be a completely new object, the same
-                          object or whatever
+                id            the id of the element that will be added.
+                              Can be a string or an integer
 
-        returns true if successful, but false if not (eg. if an item
-        with a corresponding id cannot be found.
+                properties    properties to be edited. can just as well
+                              be a completely new object, the same
+                              object or whatever
 
-        there is an internal event triggered, "MCH:updateItem"
-        note that it will be called after the item is updated, with
-        the corresponding data object, as well as the new data (in
-        extraParams) - so you can use it to take action on that item
-        based on the change.
+            returns true if successful, but false if not (eg. if an item
+            with a corresponding id cannot be found.
 
-        It might be more useful to get the old object, the new object,
-        and the change, but that would require a deep copy and maybe
-        it's simply something nobody cares about. So for now we'll
-        make do with just receiving the changed thing and then
-        the updated properties.
+            there is an internal event triggered, "MCH:updateItem"
+            note that it will be called after the item is updated, with
+            the corresponding data object, as well as the new data (in
+            extraParams) - so you can use it to take action on that item
+            based on the change.
 
-        it's possible that in the future specifying a false/true return
-        value on that event handler will determine if the item will
-        eventually be changed or not...
-    */
+            It might be more useful to get the old object, the new object,
+            and the change, but that would require a deep copy and maybe
+            it's simply something nobody cares about. So for now we'll
+            make do with just receiving the changed thing and then
+            the updated properties.
 
-    MCH.prototype.updateItem = function (id, newData) {
-        if (typeof this.items[id] === UNDEFINED) {
-            this.log("updateItem: ", id, "Warning: No item found with that ID");
-            return false;
-        }
-        this.items[id] = extend(this.items[id], newData);
-        this.trigger(id, "MCH:updateItem", newData);
-        this.log("updateItem: ", id, newData);
-        return true;
-    }
+            it's possible that in the future specifying a false/true return
+            value on that event handler will determine if the item will
+            eventually be changed or not...
+        */
 
-    /*
-        removeItem (id)
+        updateItem: function (id, newData) {
+            if (typeof this.items[id] === UNDEFINED) {
+                this.log("updateItem: ", id, "Warning: No item found with that ID");
+                return false;
+            }
+            this.items[id] = extend(this.items[id], newData);
+            this.trigger(id, "MCH:updateItem", newData);
+            this.log("updateItem: ", id, newData);
+            return true;
+        },
 
-        removes an item from the list
+        /*
+            removeItem (id)
 
-            id      the id of the element that will be added.
-                    Can be a string or an integer
+            removes an item from the list
 
-        returns true if successful, but false if not (eg. if an item with a
-        corresponding id cannot be found.
+                id      the id of the element that will be added.
+                        Can be a string or an integer
 
-        there is an internal event triggered, "MCH:removeItem"
-        note that it will be called before the item is removed, with the
-        corresponding data object - so you can use it to take action
-        on that item - just know that it will be deleted right
-        afterwards.
+            returns true if successful, but false if not (eg. if an item with a
+            corresponding id cannot be found.
 
-        it's possible that in the future specifying a false/true return
-        value on that event handler will determine if the item will
-        eventually be removed or not...
-    */
+            there is an internal event triggered, "MCH:removeItem"
+            note that it will be called before the item is removed, with the
+            corresponding data object - so you can use it to take action
+            on that item - just know that it will be deleted right
+            afterwards.
 
-    MCH.prototype.removeItem = function (id) {
+            it's possible that in the future specifying a false/true return
+            value on that event handler will determine if the item will
+            eventually be removed or not...
+        */
 
-        if (typeof this.items[id] === UNDEFINED) {
-            this.log("removeItem: ", id, "Warning: No item found with that ID");
-            return false;
-        }
-        this.trigger(id, "MCH:removeItem");
-        delete this.items[id];
-        this.log("removeItem: ", id);
-        return true;
-    };
+        removeItem: function (id) {
 
-    /**********************************************************************
-     *
-     *  New methods which I'm not sure about
-     *
-     *********************************************************************/
-      
-    /*
-        findByProperty (properties)
+            if (typeof this.items[id] === UNDEFINED) {
+                this.log("removeItem: ", id, "Warning: No item found with that ID");
+                return false;
+            }
+            this.trigger(id, "MCH:removeItem");
+            delete this.items[id];
+            this.log("removeItem: ", id);
+            return true;
+        },
 
-        retrieves all the items that have a certain property
+        /**********************************************************************
+         *
+         *  New methods which I'm not sure about
+         *
+         *********************************************************************/
+          
+        /*
+            findByProperty (properties)
 
-            properties    A JS object with the properties and the values
-                          you are searching for. There is no deep searching
-                          taking place. So if an object equals to === it
-                          is retrieved.
+            retrieves all the items that have a certain property
 
-                          Can be many properties
+                properties    A JS object with the properties and the values
+                              you are searching for. There is no deep searching
+                              taking place. So if an object equals to === it
+                              is retrieved.
 
-        returns an empty object if no items are found, or the
-        corresponding objects if they're found referenced by the
-        same id as the original objects
-    */
-    MCH.prototype.findByProperty = function (properties) {
-        if (typeof properties !== OBJECT) {
-            this.log("findByProperty: ", id, "Warning: No properties specified");
-            return {};
-        }
+                              Can be many properties
 
-        // we'll collect the list of found properties here
-        var foundItems = {}, ok;
-        // I don't have a clue how to otherwise get the first item...
-        for (var i in this.items) {
-            // default to true.. through the iteration if any of the
-            // values are false, we'll set it to false and break so
-            // the item is only accepted if this variable is still ok
-            ok = true;
-            for (var j in properties) {
-                // this function becomes around 40% faster if we skip
-                // this test, but it seems cleaner with it... what to
-                // do? what to do?
-                // using an undefined check results in around 30% speed
-                // improvement over "hasOwnProperty", so thi is hereby
-                // chosen as the default
-                if (typeof this.items[i][j] === UNDEFINED) {
-                    ok = false;
-                    break;
+            returns an empty object if no items are found, or the
+            corresponding objects if they're found referenced by the
+            same id as the original objects
+        */
+        findByProperty: function (properties) {
+            if (typeof properties !== OBJECT) {
+                this.log("findByProperty: ", id, "Warning: No properties specified");
+                return {};
+            }
+
+            // we'll collect the list of found properties here
+            var foundItems = {}, ok;
+            // I don't have a clue how to otherwise get the first item...
+            for (var i in this.items) {
+                // default to true.. through the iteration if any of the
+                // values are false, we'll set it to false and break so
+                // the item is only accepted if this variable is still ok
+                ok = true;
+                for (var j in properties) {
+                    // this function becomes around 40% faster if we skip
+                    // this test, but it seems cleaner with it... what to
+                    // do? what to do?
+                    // using an undefined check results in around 30% speed
+                    // improvement over "hasOwnProperty", so thi is hereby
+                    // chosen as the default
+                    if (typeof this.items[i][j] === UNDEFINED) {
+                        ok = false;
+                        break;
+                    }
+                    if (properties[j] !== this.items[i][j]) {
+                        ok = false;
+                        break;
+                    }
                 }
-                if (properties[j] !== this.items[i][j]) {
-                    ok = false;
-                    break;
+                // add the item to foundItems with the same key
+                if (ok) {
+                  foundItems[this.items[i].id] = this.items[i];
                 }
             }
-            // add the item to foundItems with the same key
-            if (ok) {
-              foundItems[this.items[i].id] = this.items[i];
+
+            return foundItems;
+        },
+
+        /*
+            findByFunction (properties)
+
+            retrieves all the items that evaluate true through a callback function.
+
+                callback  A function that you define that accepts a single
+                          parameters, which is the item currently being searched
+                          on.
+
+            returns an empty object if no items are found, or the
+            corresponding objects if their values result in a truthy return value
+            from that function -- note: truthy. So if it evaluates to 1 or {} it
+            will still be returned (that might change in the future to a specific === true)
+        */
+        findByFunction: function (callback) {
+            if (!isFunction(callback)) {
+                this.log("findByFunction: ", callback, "Warning: callback is not a function");
+                return {};
             }
-        }
-
-        return foundItems;
-    };
-
-    /*
-        findByFunction (properties)
-
-        retrieves all the items that evaluate true through a callback function.
-
-            callback  A function that you define that accepts a single
-                      parameters, which is the item currently being searched
-                      on.
-
-        returns an empty object if no items are found, or the
-        corresponding objects if their values result in a truthy return value
-        from that function -- note: truthy. So if it evaluates to 1 or {} it
-        will still be returned (that might change in the future to a specific === true)
-    */
-    MCH.prototype.findByFunction = function (callback) {
-        if (!isFunction(callback)) {
-            this.log("findByFunction: ", callback, "Warning: callback is not a function");
-            return {};
-        }
-        // we'll collect the list of found properties here
-        var foundItems = {};
-        for (var i in this.items) {
-            // if the function specified returns true, add it to the list
-            // we're calling the function as if it's a function within mchammer with
-            // the current mchammer object as the "this" property of the function
-            if (callback.call(this,this.items[i])) {
-              foundItems[this.items[i].id] = this.items[i];
+            // we'll collect the list of found properties here
+            var foundItems = {};
+            for (var i in this.items) {
+                // if the function specified returns true, add it to the list
+                // we're calling the function as if it's a function within mchammer with
+                // the current mchammer object as the "this" property of the function
+                if (callback.call(this,this.items[i])) {
+                  foundItems[this.items[i].id] = this.items[i];
+                }
             }
-        }
-        return foundItems;
-    };
+            return foundItems;
+        },
 
-    /*
-        getFirstItem ()
+        /*
+            getFirstItem ()
 
-        retrieves the first item from the item storage.
+            retrieves the first item from the item storage.
 
-        returns an empty object if the item is not found, or the
-        corresponding object if it's found.
+            returns an empty object if the item is not found, or the
+            corresponding object if it's found.
 
-        I don't know why you'd need this function, except for
-        testing purposes
-    */
-    MCH.prototype.getFirstItem = function () {
-        this.log("getFirstItem: ");
-        // I don't have a clue how to otherwise get the first item...
-        for (var i in this.items) {
-          if (!this.items.hasOwnProperty(i)) continue;
-          return this.items[i];
-        }
-    };
-
-    /**********************************************************************
-     *
-     *  End of new methods which I'm not sure about
-     *
-     *********************************************************************/
-      
-    /*
-        getItem (id or array if ids)
-
-        retrieves an item from the item storage by it's id. Currently you
-        can only retrieve a single item.
-
-            id:   The id of the item to retrieve. Can be a string or an
-                  integer or an array of those
-
-        returns an empty object if the item is not found, or the
-        corresponding objects if it's found.
-
-        if you provide an array if ids as the parameter, it returns an
-        array of objects
-
-        note: the function is recursive, so theoretically you could provide a 
-        multi-dimensional array of ids, though I'm not sure why you'd
-        want to do that.
-    */
-
-    MCH.prototype.getItem = function (id) {
-        if (typeof id === UNDEFINED) {
-            this.log("getItem: ", id, "Warning: id provided is undefined");
-            return {};
-        }
-        if (isArray(id)) {
-            var ret = [], i = 0, l = id.length;
-            for ( ; i < l; i++) {
-                ret.push(this.getItem(id[i]));
+            I don't know why you'd need this function, except for
+            testing purposes
+        */
+        getFirstItem: function () {
+            this.log("getFirstItem: ");
+            // I don't have a clue how to otherwise get the first item...
+            for (var i in this.items) {
+              if (!this.items.hasOwnProperty(i)) continue;
+              return this.items[i];
             }
-            return ret;
+        },
+
+        /**********************************************************************
+         *
+         *  End of new methods which I'm not sure about
+         *
+         *********************************************************************/
+          
+        /*
+            getItem (id or array if ids)
+
+            retrieves an item from the item storage by it's id. Currently you
+            can only retrieve a single item.
+
+                id:   The id of the item to retrieve. Can be a string or an
+                      integer or an array of those
+
+            returns an empty object if the item is not found, or the
+            corresponding objects if it's found.
+
+            if you provide an array if ids as the parameter, it returns an
+            array of objects
+
+            note: the function is recursive, so theoretically you could provide a 
+            multi-dimensional array of ids, though I'm not sure why you'd
+            want to do that.
+        */
+
+        getItem: function (id) {
+            if (typeof id === UNDEFINED) {
+                this.log("getItem: ", id, "Warning: id provided is undefined");
+                return {};
+            }
+            if (isArray(id)) {
+                var ret = [], i = 0, l = id.length;
+                for ( ; i < l; i++) {
+                    ret.push(this.getItem(id[i]));
+                }
+                return ret;
+            }
+            if (typeof this.items[id] === UNDEFINED) {
+                this.log("getItem: ", id, "id provided not found");
+                return {};
+            }
+            this.log("getItem: ", id);
+            return this.items[id];
+        },
+
+        /*
+            bind (eventName, callback)
+
+            adds a new event handler to the events list.
+
+                eventName     string identifier for the specified event.
+
+                callback      function to be called when the event gets
+                              triggered.
+
+            You can have many event handlers assigned to the same event.
+            I'm not sure if you'll ever be able to remove them, though.
+
+            The function that gets called has the following properties:
+
+                function (item, extra):
+
+                item          the javascript object originally added
+                              using the addItem function.
+
+                              Additionally there is a object called
+                              "_" that gets added to the item with
+                              meta information from MCH.
+                              Currently, the only property of that
+                              object is "trigger" that specifies
+                              the name of the trigger that triggered
+                              the function. Which might be useful
+                              when setting the same event handler
+                              to many triggers.
+
+                extraParams   if you trigger the function using the
+                              extraParams variable, it will be
+                              assigned to the second parameter of
+                              the function.
+
+                you should realize that the item passed on into the
+                function is not a deep copy, but the actual variable
+                in memory - any changes you make to it will persist
+                without those changes triggering any events. This
+                can be very useful eg. for adding jquery references
+                to the object etc.
+
+                the "this" value of the function will be a reference
+                to the MCH object. So essentially you're calling
+                it from within itself. This might change in the
+                future (as well as practically everything else)
+
+                MCH places no constraints on a return value and will
+                essentially ignore it.
+
+                there are also built in events that you can hook on
+                to, that are triggered by MCHammer internally,
+                nameley:
+
+                MCH:addItem - gets triggered when you add a new
+                              item to the object using addItem
+        */
+
+                bind: function (eventName, callback) {
+            if (typeof this.events[eventName] === UNDEFINED) {
+                this.events[eventName] = [];
+            }
+            if (!isFunction(callback)) {
+                this.log("bind: "+eventName, callback, "Error: Not a function, is a: "+typeof callback);
+                return false;
+            }
+            this.events[eventName].push(callback);
+            this.log("bind: "+eventName, callback);
+            return true;
+        },
+
+        /*
+            trigger (id, eventName[, extraParams])
+
+            Triggers all event handlers for a specified name. It requires
+            that you provide an ID of the element that is being affected.
+
+                id                        the id of the item the trigger applies to
+
+                                          can, technically, also be an object, and
+                                          theoretically you might want to ever
+                                          pass an object to it, even completley
+                                          unrelated, but personally I think that's
+                                          nuts.. (used internally to trigger events
+                                          on objects that have already been retrieved)
+
+                eventName                 name of the event to be triggered
+
+                extraParams (optional)    if there are any extra variables that
+                                          you wish to pass on, this is the place
+                                          for those. If you need multiple
+                                          variables, you can add them as a JS
+                                          object.
+
+            returns true if successful, false if there is no event for the
+            matching name.
+        */
+
+        trigger: function (id, eventName, extraParams) {
+            if (typeof this.events[eventName] === UNDEFINED) {
+                this.log("trigger: ", id, eventName, "Warning: Event triggered has no event handler");
+                return false;
+            }
+
+            var item;
+            // optionally you can pass on an object to the trigger - that will
+            // make the trigger not retrieve the item but use that object.
+            // theoretically you could then pass on something that's not at all
+            // a member of the item list, i'd say that's crazy, but I guess it's
+            // up to the developer... (used mostly internally to trigger an
+            // event on an object that's already been created and is in memory)
+            if (typeof id === OBJECT && id.hasOwnProperty("_")) {
+                item = id;
+                id = item.id;
+            } else {
+                item = this.getItem(id);
+            }
+
+            // pass on meta information, currently only the name of the trigger
+            // - useful if using the same event handler for multiple triggers
+            item._.trigger = eventName;
+
+            // set up params for calling the corresponding event.
+            // the params are the item being called on and any extra params
+            // passed on when triggering the event
+            var params = [item];
+            if (typeof extraParams !== UNDEFINED) {
+                params.push(extraParams);
+            }
+
+            // call all defined events for this item's ID
+            for (var i = 0, l = this.events[eventName].length; i < l; i++) {
+                this.events[eventName][i].apply(this, params);
+            }
+
+            this.log("trigger: ", id, eventName);
+
+            return true;
         }
-        if (typeof this.items[id] === UNDEFINED) {
-            this.log("getItem: ", id, "id provided not found");
-            return {};
-        }
-        this.log("getItem: ", id);
-        return this.items[id];
-    };
-
-    /*
-        bind (eventName, callback)
-
-        adds a new event handler to the events list.
-
-            eventName     string identifier for the specified event.
-
-            callback      function to be called when the event gets
-                          triggered.
-
-        You can have many event handlers assigned to the same event.
-        I'm not sure if you'll ever be able to remove them, though.
-
-        The function that gets called has the following properties:
-
-            function (item, extra):
-
-            item          the javascript object originally added
-                          using the addItem function.
-
-                          Additionally there is a object called
-                          "_" that gets added to the item with
-                          meta information from MCH.
-                          Currently, the only property of that
-                          object is "trigger" that specifies
-                          the name of the trigger that triggered
-                          the function. Which might be useful
-                          when setting the same event handler
-                          to many triggers.
-
-            extraParams   if you trigger the function using the
-                          extraParams variable, it will be
-                          assigned to the second parameter of
-                          the function.
-
-            you should realize that the item passed on into the
-            function is not a deep copy, but the actual variable
-            in memory - any changes you make to it will persist
-            without those changes triggering any events. This
-            can be very useful eg. for adding jquery references
-            to the object etc.
-
-            the "this" value of the function will be a reference
-            to the MCH object. So essentially you're calling
-            it from within itself. This might change in the
-            future (as well as practically everything else)
-
-            MCH places no constraints on a return value and will
-            essentially ignore it.
-
-            there are also built in events that you can hook on
-            to, that are triggered by MCHammer internally,
-            nameley:
-
-            MCH:addItem - gets triggered when you add a new
-                          item to the object using addItem
-    */
-
-    MCH.prototype.bind = function (eventName, callback) {
-        if (typeof this.events[eventName] === UNDEFINED) {
-            this.events[eventName] = [];
-        }
-        if (!isFunction(callback)) {
-            this.log("bind: "+eventName, callback, "Error: Not a function, is a: "+typeof callback);
-            return false;
-        }
-        this.events[eventName].push(callback);
-        this.log("bind: "+eventName, callback);
-        return true;
-    };
-
-    /*
-        trigger (id, eventName[, extraParams])
-
-        Triggers all event handlers for a specified name. It requires
-        that you provide an ID of the element that is being affected.
-
-            id                        the id of the item the trigger applies to
-
-                                      can, technically, also be an object, and
-                                      theoretically you might want to ever
-                                      pass an object to it, even completley
-                                      unrelated, but personally I think that's
-                                      nuts.. (used internally to trigger events
-                                      on objects that have already been retrieved)
-
-            eventName                 name of the event to be triggered
-
-            extraParams (optional)    if there are any extra variables that
-                                      you wish to pass on, this is the place
-                                      for those. If you need multiple
-                                      variables, you can add them as a JS
-                                      object.
-
-        returns true if successful, false if there is no event for the
-        matching name.
-    */
-
-    MCH.prototype.trigger = function (id, eventName, extraParams) {
-        if (typeof this.events[eventName] === UNDEFINED) {
-            this.log("trigger: ", id, eventName, "Warning: Event triggered has no event handler");
-            return false;
-        }
-
-        var item;
-        // optionally you can pass on an object to the trigger - that will
-        // make the trigger not retrieve the item but use that object.
-        // theoretically you could then pass on something that's not at all
-        // a member of the item list, i'd say that's crazy, but I guess it's
-        // up to the developer... (used mostly internally to trigger an
-        // event on an object that's already been created and is in memory)
-        if (typeof id === OBJECT && id.hasOwnProperty("_")) {
-            item = id;
-            id = item.id;
-        } else {
-            item = this.getItem(id);
-        }
-
-        // pass on meta information, currently only the name of the trigger
-        // - useful if using the same event handler for multiple triggers
-        item._.trigger = eventName;
-
-        // set up params for calling the corresponding event.
-        // the params are the item being called on and any extra params
-        // passed on when triggering the event
-        var params = [item];
-        if (typeof extraParams !== UNDEFINED) {
-            params.push(extraParams);
-        }
-
-        // call all defined events for this item's ID
-        for (var i = 0, l = this.events[eventName].length; i < l; i++) {
-            this.events[eventName][i].apply(this, params);
-        }
-
-        this.log("trigger: ", id, eventName);
-
-        return true;
     };
 
 
