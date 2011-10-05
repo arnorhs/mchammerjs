@@ -186,7 +186,6 @@ window.MCHammer = (function(){
                 return false;
             }
             data.id = id;
-            data._ = {};
             // used internally for some stuff
             this.items[id] = data;
             this.log("addItem: ", id, data);
@@ -300,14 +299,14 @@ window.MCHammer = (function(){
             }
 
             // we'll collect the list of found properties here
-            var foundItems = {}, ok;
+            var foundItems = {}, ok, i, j;
             // I don't have a clue how to otherwise get the first item...
-            for (var i in this.items) {
+            for (i in this.items) {
                 // default to true.. through the iteration if any of the
                 // values are false, we'll set it to false and break so
                 // the item is only accepted if this variable is still ok
                 ok = true;
-                for (var j in properties) {
+                for (j in properties) {
                     // this function becomes around 40% faster if we skip
                     // this test, but it seems cleaner with it... what to
                     // do? what to do?
@@ -450,16 +449,6 @@ window.MCHammer = (function(){
                 item          the javascript object originally added
                               using the addItem function.
 
-                              Additionally there is a object called
-                              "_" that gets added to the item with
-                              meta information from MCH.
-                              Currently, the only property of that
-                              object is "trigger" that specifies
-                              the name of the trigger that triggered
-                              the function. Which might be useful
-                              when setting the same event handler
-                              to many triggers.
-
                 extraParams   if you trigger the function using the
                               extraParams variable, it will be
                               assigned to the second parameter of
@@ -488,13 +477,13 @@ window.MCHammer = (function(){
                               item to the object using addItem
         */
 
-                bind: function (eventName, callback) {
-            if (typeof this.events[eventName] === UNDEFINED) {
-                this.events[eventName] = [];
-            }
+        bind: function (eventName, callback) {
             if (!isFunction(callback)) {
                 this.log("bind: "+eventName, callback, "Error: Not a function, is a: "+typeof callback);
                 return false;
+            }
+            if (typeof this.events[eventName] === UNDEFINED) {
+                this.events[eventName] = [];
             }
             this.events[eventName].push(callback);
             this.log("bind: "+eventName, callback);
@@ -541,16 +530,12 @@ window.MCHammer = (function(){
             // a member of the item list, i'd say that's crazy, but I guess it's
             // up to the developer... (used mostly internally to trigger an
             // event on an object that's already been created and is in memory)
-            if (typeof id === OBJECT && id.hasOwnProperty("_")) {
+            if (typeof id === OBJECT && throw ("do some cool check for constructor")) {
                 item = id;
                 id = item.id;
             } else {
                 item = this.getItem(id);
             }
-
-            // pass on meta information, currently only the name of the trigger
-            // - useful if using the same event handler for multiple triggers
-            item._.trigger = eventName;
 
             // set up params for calling the corresponding event.
             // the params are the item being called on and any extra params
@@ -562,7 +547,7 @@ window.MCHammer = (function(){
 
             // call all defined events for this item's ID
             for (var i = 0, l = this.events[eventName].length; i < l; i++) {
-                this.events[eventName][i].apply(this, params);
+                this.events[eventName][i].apply({eventName:eventName, MCHObj: this}, params);
             }
 
             this.log("trigger: ", id, eventName);
