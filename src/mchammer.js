@@ -24,10 +24,10 @@
 
 */
 
-window.MCHammer = (function(){
+window.MCHammer = (function(window, undefined){
 
     // These are only defined so the minified version becomes smaller. Every byte counts :)
-    var UNDEFINED = "undefined", OBJECT = "object";
+    var OBJECT = "object";
 
     /*
         some of these are copied from jQuery.. sorry about that. But they
@@ -36,10 +36,13 @@ window.MCHammer = (function(){
     */
 
     var isFunction = function (obj) {
+      // jquery doesn't do this, maybe it won't work in all browsers
       return typeof obj === "function";
     };
 
     var isArray = function (obj) {
+      // if an object defines a length attribute, this will actually
+      // return true as well. Might want to use whatever jquery uses instead...
       return typeof obj === OBJECT && typeof obj["length"] === "number";
     };
 
@@ -93,7 +96,22 @@ window.MCHammer = (function(){
 
 
 
+    /*
+        this is the class for a data object that gets created. It's mostly used
+        because we'll want to do a check for the datatype later on - to make sure
+        everything's fine.
 
+        it's *possible* that in the future we might add some functions to it's
+        prototype, but for now this should do...
+    */
+    function MCHData (obj) {
+        if (obj === undefined) {
+            obj = {};
+        }
+        for (var i in obj) {
+            this[i] = obj[i];
+        }
+    }
 
 
 
@@ -127,6 +145,12 @@ window.MCHammer = (function(){
     }
 
     MCH.prototype = {
+
+        /* helper function to create a new MCHData object -- probably won't be
+           used externally */
+        newData: function (obj) {
+            return new MCHData(obj);
+        },
 
         /*
             log ([argument1, [argument2, [...]]])
@@ -181,13 +205,13 @@ window.MCHammer = (function(){
 
         addItem: function (id, data) {
 
-            if (typeof this.items[id] !== UNDEFINED) {
+            if (this.items[id] !== undefined) {
                 this.log("addItem: ", id, data, "Warning: item with the same ID already there");
                 return false;
             }
             data.id = id;
             // used internally for some stuff
-            this.items[id] = data;
+            this.items[id] = new MCHData(data);
             this.log("addItem: ", id, data);
             this.trigger(data, "MCH:addItem");
             return true;
@@ -226,7 +250,7 @@ window.MCHammer = (function(){
         */
 
         updateItem: function (id, newData) {
-            if (typeof this.items[id] === UNDEFINED) {
+            if (this.items[id] === undefined) {
                 this.log("updateItem: ", id, "Warning: No item found with that ID");
                 return false;
             }
@@ -260,7 +284,7 @@ window.MCHammer = (function(){
 
         removeItem: function (id) {
 
-            if (typeof this.items[id] === UNDEFINED) {
+            if (this.items[id] === undefined) {
                 this.log("removeItem: ", id, "Warning: No item found with that ID");
                 return false;
             }
@@ -313,11 +337,7 @@ window.MCHammer = (function(){
                     // using an undefined check results in around 30% speed
                     // improvement over "hasOwnProperty", so thi is hereby
                     // chosen as the default
-                    if (typeof this.items[i][j] === UNDEFINED) {
-                        ok = false;
-                        break;
-                    }
-                    if (properties[j] !== this.items[i][j]) {
+                    if (this.items[i][j] === undefined || properties[j] !== this.items[i][j]) {
                         ok = false;
                         break;
                     }
@@ -329,6 +349,29 @@ window.MCHammer = (function(){
             }
 
             return foundItems;
+        },
+        findByProperty2: function (properties) {
+            if (typeof properties !== OBJECT) {
+                this.log("findByProperty: ", id, "Warning: No properties specified");
+                return {};
+            }
+
+            return this.findByFunction(function(dataObj) {
+                // default to true.. through the iteration if any of the
+                // values are false, we'll set it to false and break so
+                // the item is only accepted if this variable is still ok
+                var ok = true;
+                for (var j in properties) {
+                    // this function becomes around 40% faster if we skip this test, but it
+                    // seems cleaner with it... what to do? what to do?
+                    if (dataObj[j] === undefined || dataObj[j] !== properties[j]) {
+                        ok = false;
+                        break;
+                    }
+                }
+                // add the item to foundItems with the same key
+                return ok;
+            });
         },
 
         /*
@@ -356,8 +399,14 @@ window.MCHammer = (function(){
                 // if the function specified returns true, add it to the list
                 // we're calling the function as if it's a function within mchammer with
                 // the current mchammer object as the "this" property of the function
-                if (callback.call(this,this.items[i])) {
-                  foundItems[this.items[i].id] = this.items[i];
+                // this used to be called using .call on the function so the "this" context
+                // would be maintained as the MCHammer thing - but that added around 20-30%
+                // more time on to it...
+                // doing it with a pure loop does actually make it so that this will get
+                // 20% faster - but i don't know if that's worth the extra lines of code
+                // required..
+                if (callback(this.items[i])) {
+                    foundItems[this.items[i].id] = this.items[i];
                 }
             }
             return foundItems;
@@ -410,9 +459,9 @@ window.MCHammer = (function(){
         */
 
         getItem: function (id) {
-            if (typeof id === UNDEFINED) {
+            if (id === undefined) {
                 this.log("getItem: ", id, "Warning: id provided is undefined");
-                return {};
+                return new MCHData();
             }
             if (isArray(id)) {
                 var ret = [], i = 0, l = id.length;
@@ -421,9 +470,9 @@ window.MCHammer = (function(){
                 }
                 return ret;
             }
-            if (typeof this.items[id] === UNDEFINED) {
+            if (this.items[id] === undefined) {
                 this.log("getItem: ", id, "id provided not found");
-                return {};
+                return new MCHData();
             }
             this.log("getItem: ", id);
             return this.items[id];
@@ -482,7 +531,7 @@ window.MCHammer = (function(){
                 this.log("bind: "+eventName, callback, "Error: Not a function, is a: "+typeof callback);
                 return false;
             }
-            if (typeof this.events[eventName] === UNDEFINED) {
+            if (this.events[eventName] === undefined) {
                 this.events[eventName] = [];
             }
             this.events[eventName].push(callback);
@@ -518,22 +567,23 @@ window.MCHammer = (function(){
         */
 
         trigger: function (id, eventName, extraParams) {
-            if (typeof this.events[eventName] === UNDEFINED) {
+            if (this.events[eventName] === undefined) {
                 this.log("trigger: ", id, eventName, "Warning: Event triggered has no event handler");
                 return false;
             }
 
             var item;
-            // optionally you can pass on an object to the trigger - that will
-            // make the trigger not retrieve the item but use that object.
+            // optionally you can pass on an MCHData object to the trigger - that will
+            // make the trigger not retrieve the item but use that object instead.
             // theoretically you could then pass on something that's not at all
             // a member of the item list, i'd say that's crazy, but I guess it's
             // up to the developer... (used mostly internally to trigger an
             // event on an object that's already been created and is in memory)
-            if (typeof id === OBJECT && throw ("do some cool check for constructor")) {
+            if (typeof id === OBJECT && id.constructor === MCHData) {
                 item = id;
                 id = item.id;
             } else {
+                // assuming it's an ID at this point
                 item = this.getItem(id);
             }
 
@@ -541,13 +591,13 @@ window.MCHammer = (function(){
             // the params are the item being called on and any extra params
             // passed on when triggering the event
             var params = [item];
-            if (typeof extraParams !== UNDEFINED) {
+            if (extraParams !== undefined) {
                 params.push(extraParams);
             }
 
             // call all defined events for this item's ID
             for (var i = 0, l = this.events[eventName].length; i < l; i++) {
-                this.events[eventName][i].apply({eventName:eventName, MCHObj: this}, params);
+                this.events[eventName][i].apply({eventName:eventName, MCHInstance: this}, params);
             }
 
             this.log("trigger: ", id, eventName);

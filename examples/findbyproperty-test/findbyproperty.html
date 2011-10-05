@@ -27,8 +27,13 @@
     <p>Should be run with the console open</p>
 
     <button onclick="run_test1();">Run test1</button> populating the dataset with 1,000,000 rows (each click adds more)<br>
-    <button onclick="run_test2();">Run test2</button> finding by one property<br>
-    <button onclick="run_test3();">Run test3</button> finding by two properties<br>
+    <h4>findByProperty</h4>
+    <button onclick="run_fbp('findByProperty',{prop1:345});">Run find by one property</button> finding by one property<br>
+    <button onclick="run_fbp('findByProperty',{prop1:345,prop2:583});">Run find by two properties</button> finding by two properties<br>
+
+    <h4>findByProperty2</h4>
+    <button onclick="run_fbp('findByProperty2',{prop1:345});">Run find by one property</button> finding by one property<br>
+    <button onclick="run_fbp('findByProperty2',{prop1:345,prop2:583});">Run find by two properties</button> finding by two properties<br>
 
   </div>
 

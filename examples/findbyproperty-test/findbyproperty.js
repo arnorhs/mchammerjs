@@ -15,19 +15,30 @@ function run_test1 () {
 
 }
 
+// small hack
+Array.prototype.average = function () { var sum = 0; for (var i = 0; i < this.length; i++) { sum += this[i]; } return parseInt(sum / this.length, 10); }
+Object.prototype.length = function () { l = 0; for (var i in this) { if (this.hasOwnProperty(i)) l++; } return l; }
 
-function run_test2 () {
-  fbpTime = new Date;
-  prop = a.findByProperty({prop1:345});
-  fbpTime = (new Date) - fbpTime;
-  console.log("fbpTime: ",fbpTime);
-  console.log(prop);
+function run_fbp (func,props) {
+  benchmark(func,props.length(),function(){
+    prop = a[func](props);
+  });
 }
 
-function run_test3 () {
-  fbpTime = new Date;
-  prop = a.findByProperty({prop1:345,prop2:583});
-  fbpTime = (new Date) - fbpTime;
-  console.log("fbpTime: ",fbpTime);
-  console.log(prop);
+
+function benchmark (name, nr, callback) {
+  name = name + '-'+ nr
+  if (!window.benchmark) {
+    window.benchmark = {};
+  }
+  if (!window.benchmark[name]) {
+    window.benchmark[name] = [];
+  }
+  var t = new Date;
+  callback();
+  t = (new Date) - t;
+
+  window.benchmark[name].push(t);
+  console.log(name, ": ",t, " average out of ",window.benchmark[name].length,": ",window.benchmark[name].average());
+
 }
