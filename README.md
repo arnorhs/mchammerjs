@@ -112,4 +112,5 @@ something to contribute.
 Even spelling error fixes are welcome. I probably could need them since I'm not
 a native english speaker.
 
-
+#TODO:
+- Update API after suggestions from Steve that ended up getting implemented.
